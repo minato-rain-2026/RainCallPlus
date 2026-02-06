@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RainCall+</title>
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1163/1163657.png">
+    <style>
+        body { 
+            /* 雨なら青系、晴れならピンク系の背景に自動で変わります */
+            background: {% if pop >= 30 %}linear-gradient(135deg, #4facfe 0%, #00f2fe 100%){% else %}linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%){% endif %};
+            font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; 
+        }
+        .card { background: rgba(255,255,255,0.9); border-radius: 30px; padding: 40px; text-align: center; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); backdrop-filter: blur(10px); }
+        h1 { color: #333; font-size: 20px; margin-bottom: 20px; }
+        .pop { font-size: 70px; font-weight: bold; color: #00838f; margin: 10px 0; }
+        .notify-btn {
+            background: #ff7043; color: white; border: none; padding: 10px; border-radius: 12px;
+            cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 20px;
+        }
+        .location-tag { display: inline-block; background: #333; color: white; padding: 5px 15px; border-radius: 20px; font-size: 12px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>RainCall+</h1>
+        
+        <button onclick="askNotificationPermission()" class="notify-btn">
+            🔔 雨予報の通知をオンにする
+        </button>
+
+        <div class="pop">{{ pop }}%</div>
+        <p style="font-weight: bold;">{{ message }}</p>
+        <div class="location-tag">📍 {{ city }}</div>
+    </div>
+
+    <script>
+        // 通知の処理
+        function askNotificationPermission() {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    alert("通知設定が完了しました！");
+                    checkRainAndNotify();
+                }
+            });
+        }
+
+        function checkRainAndNotify() {
+            const pop = {{ pop }};
+            if (pop >= 30) {
+                new Notification("RainCall+", {
+                    body: `今日は雨が降りそう（${pop}%）だよ！傘を忘れずに。☔`,
+                    icon: "https://cdn-icons-png.flaticon.com/512/1163/1163657.png"
+                });
+            }
+        }
+
+        // ページ読み込み時に自動実行
+        window.onload = function() {
+            if (Notification.permission === "granted") {
+                checkRainAndNotify();
+            }
+
+            // URLに位置情報がない場合だけ取得しに行く（無限ループ防止）
+            const urlParams = new URLSearchParams(window.location.search);
+            if (!urlParams.has('lat')) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        window.location.href = `/?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`;
+                    },
+                    () => { console.log("位置情報が取得できませんでした"); }
+                );
+            }
+        };
+    </script>
+</body>
+</html>
