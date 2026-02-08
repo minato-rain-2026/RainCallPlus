@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RainCall+</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>📍 {{ city }}</h1>
+        <div class="pop-circle">
+            <span class="number">{{ pop }}</span><span class="percent">%</span>
+        </div>
+        <p class="message">{{ message }}</p>
+    </div>
+
+    <script>
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            if (!params.has('lat') && navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (p) => {
+                        window.location.replace(`/?lat=${p.coords.latitude}&lon=${p.coords.longitude}`);
+                    },
+                    (e) => { console.error(e); },
+                    { enableHighAccuracy: true, timeout: 5000 }
+                );
+            }
+        })();
+    </script>
+</body>
+</html>
