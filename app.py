@@ -41,17 +41,22 @@ print("※この画面（VS Code）を開いたままにしておいてくださ
 
 # ずっと見張り続ける
 
-mport os
-from flask import Flask, request, abort
+import os
+from flask import Flask
 
 app = Flask(__name__)
 
+@app.route("/")
+def hello():
+    # サーバーが生きているか確認するためのページ
+    return "RainCall is Live!"
+
 @app.route("/callback", methods=['POST'])
 def callback():
-    # ここにLINEのメッセージを受け取る処理を書きますが、
-    # まずはRenderを「Live」にするために最小限の構成にします
+    # LINEからの通知を受け取る窓口（今はOKと返すだけ）
     return 'OK'
 
 if __name__ == "__main__":
+    # Renderから指定されるポート番号を使って起動する設定
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
