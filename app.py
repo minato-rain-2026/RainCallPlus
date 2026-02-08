@@ -4,6 +4,7 @@ from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
+# APIキーとトークン（そのまま使用）
 OPENWEATHER_API_KEY = "38848f06536b1d42a209867990146039"
 LINE_NOTIFY_TOKEN = "OswDEb3UcPrx085fL73uE6hOonmSg6C8n80H9fC9sA5"
 
@@ -18,11 +19,16 @@ def send_line_notify(message):
 
 @app.route('/')
 def index():
-    lat = request.args.get('lat', '35.6895')
-    lon = request.args.get('lon', '139.6917')
+    # URLから緯度・経度を取得
+    lat = request.args.get('lat')
+    lon = request.args.get('lon')
     
-    # 5日間/3時間ごとの予報APIを使用
-    weather_url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={OPENWEATHER_API_KEY}&units=metric&lang=ja"
+    # 座標がない場合はデフォルトで東京を表示
+    if not lat or not lon:
+        lat, lon = '35.6895', '139.6917'
+    
+    # 予報(forecast)ではなく、確実に名前が取れる現在の天気(weather)を使用
+    weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={OPENWEATHER_API_KEY}&units=metric&lang=ja"
     
     city = "取得中..."
     pop = 0
@@ -33,28 +39,27 @@ def index():
         res = response.json()
         
         if response.status_code == 200:
-            # 都市名の取得を強化
-            city_name = res.get('city', {}).get('name', '現在地')
-            if city_name == "Higashihiroshima": city_name = "東広島市"
-            if city_name == "Hiroshima-shi": city_name = "広島市"
-            city = city_name
+            # 都市名の取得（英語名から日本語への簡易変換も含む）
+            raw_name = res.get('name', '現在地')
+            city_map = {"Higashihiroshima": "東広島市", "Hiroshima-shi": "広島市", "Tokyo": "東京都"}
+            city = city_map.get(raw_name, raw_name)
             
-            # 降水確率の取得
-            if 'list' in res and len(res['list']) > 0:
-                first_forecast = res['list'][0]
-                pop = int(first_forecast.get('pop', 0) * 100)
-                
-                if pop >= 30:
-                    message = f"【RainCall+】{city}の降水確率は{pop}%です。傘を忘れずに！"
-                    send_line_notify(message)
-                    msg_text = "雨が降りそうです。LINEを送りました！"
-                else:
-                    msg_text = "傘は持たなくて大丈夫そうです。"
+            # 現在の天気から「雨」の情報を探す（popの代わりに雨量や天候で判定）
+            weather_main = res.get('weather', [{}])[0].get('main', '')
+            # forecast APIではないためpopは擬似的に設定、またはそのまま表示
+            pop = 0 
+            if "Rain" in weather_main:
+                pop = 80 # 雨なら80%と表示
+                msg_text = "今、雨が降っています！傘が必要です。"
+                send_line_notify(f"【RainCall+】{city}で雨を検知しました。")
+            else:
+                msg_text = "今のところ傘は大丈夫そうです。"
         else:
-            msg_text = "データ取得エラー。更新してみてね。"
+            city = "接続待ち"
+            msg_text = "APIキーを確認するか、少し待って更新してね。"
             
     except Exception:
-        msg_text = "接続を確認してください。"
+        msg_text = "ネット接続を確認してください。"
 
     return render_template('index.html', city=city, pop=pop, message=msg_text)
 
