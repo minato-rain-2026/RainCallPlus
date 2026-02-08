@@ -1,28 +1,45 @@
-from flask import Flask, render_template, request
+import schedule
+import time
 import requests
+from linebot import LineBotApi
+from linebot.models import TextSendMessage
 
-app = Flask(__name__)
+# --- 設定：自分のものに書き換えてください ---
+API_KEY = "dcb2c4d8af0212f468f270bfcdc1dccf"
+LINE_ACCESS_TOKEN = "あなたの長いアクセストークン"
+# 通知したい時間を設定（例: "07:30"）
+SCHEDULE_TIME = "14:56" 
 
-API_KEY = "dcb2c4d8af0212f468f270bfcdc1dccf" # ここを自分のキーに変えてね！
+line_bot_api = LineBotApi(LINE_ACCESS_TOKEN)
 
-@app.route('/')
-def home():
-    # ブラウザから送られてきた緯度(lat)と経度(lon)を受け取る
-    lat = request.args.get('lat', '35.6895') # デフォルトは東京
-    lon = request.args.get('lon', '139.6917')
-
-    # 緯度・経度を使って天気を調べるURL
+def job():
+    print(f"{SCHEDULE_TIME}になりました。天気をチェックします...")
+    
+    # 東京の天気をチェック（緯度・経度は必要に応じて変えてください）
+    lat, lon = "35.6895", "139.6917"
     url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
     
-    data = requests.get(url).json()
-    pop = data['list'][0]['pop'] * 100
-    city_name = data['city']['name'] # その場所の都市名も取得
+    try:
+        data = requests.get(url).json()
+        pop = data['list'][0]['pop'] * 100
+        
+        if pop >= 30:
+            message = f"【傘予報】今日の降水確率は{int(pop)}%です。傘を持って行ってね！☔"
+            line_bot_api.broadcast(TextSendMessage(text=message))
+            print("LINEを送りました。")
+        else:
+            print("雨の心配はないのでLINEは見送りました。")
+            
+    except Exception as e:
+        print(f"エラーが発生しました: {e}")
 
-    if pop >= 30:
-        message = "今日は傘が必要だよ！☔"
-    else:
-        message = "傘は不要そう。いってらっしゃい！☀️"
-    
-    return render_template('index.html', pop=int(pop), message=message, city=city_name)
-if __name__ == "__main__":
-    app.run(debug=True)
+# 時間を予約する
+schedule.every().day.at(SCHEDULE_TIME).do(job)
+
+print(f"監視を開始しました。毎日 {SCHEDULE_TIME} に通知します。")
+print("※この画面（VS Code）を開いたままにしておいてくださいね。")
+
+# ずっと見張り続ける
+while True:
+    schedule.run_pending()
+    time.sleep(1)
