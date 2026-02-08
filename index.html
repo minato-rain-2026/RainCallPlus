@@ -16,18 +16,27 @@
     </div>
 
     <script>
-        (function() {
+        // ページを読み込んだ瞬間に位置情報を取得
+        window.onload = function() {
             const params = new URLSearchParams(window.location.search);
-            if (!params.has('lat') && navigator.geolocation) {
+            
+            // すでにURLに lat（緯度）が含まれている場合は何もしない（無限ループ防止）
+            if (params.has('lat')) return;
+
+            if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    (p) => {
-                        window.location.replace(`/?lat=${p.coords.latitude}&lon=${p.coords.longitude}`);
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        // 取得した現在地をURLにくっつけて、自分自身に送り直す！
+                        window.location.href = `/?lat=${lat}&lon=${lon}`;
                     },
-                    (e) => { console.error(e); },
-                    { enableHighAccuracy: true, timeout: 5000 }
+                    (error) => {
+                        console.error("位置情報が取得できませんでした", error);
+                    }
                 );
             }
-        })();
+        };
     </script>
 </body>
 </html>
