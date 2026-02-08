@@ -40,7 +40,7 @@ print(f"監視を開始しました。毎日 {SCHEDULE_TIME} に通知します�
 print("※この画面（VS Code）を開いたままにしておいてくださいね。")
 
 # ずっと見張り続ける
-while True:
+
 mport os
 from flask import Flask, request, abort
 
