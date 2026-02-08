@@ -41,5 +41,17 @@ print("※この画面（VS Code）を開いたままにしておいてくださ
 
 # ずっと見張り続ける
 while True:
-    schedule.run_pending()
-    time.sleep(1)
+mport os
+from flask import Flask, request, abort
+
+app = Flask(__name__)
+
+@app.route("/callback", methods=['POST'])
+def callback():
+    # ここにLINEのメッセージを受け取る処理を書きますが、
+    # まずはRenderを「Live」にするために最小限の構成にします
+    return 'OK'
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
