@@ -32,13 +32,12 @@ def send_line_notification(pop, city):
 
 @app.route('/')
 def index():
-    # URLから位置情報を取得（デフォルトは東京）
+    # URLについている現在地（lat/lon）を読み取るように変更！
     lat = request.args.get('lat', '35.6895')
     lon = request.args.get('lon', '139.6917')
     
-    # OpenWeatherMapから天気予報を取得
+    # 読み取った lat と lon を使って天気を検索する
     weather_url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={OPENWEATHER_API_KEY}&units=metric&lang=ja"
-    
     pop = 0
     city = "位置情報を取得中..."
     message = "位置情報を許可してね"
