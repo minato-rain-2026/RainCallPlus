@@ -32,9 +32,14 @@ def send_line_notification(pop, city):
 
 @app.route('/')
 def index():
-    # URLについている現在地（lat/lon）を読み取るように変更！
+@app.route('/')
+def index():
+    # ★ここ！送られてきた座標があれば使い、なければ東京にする設定
     lat = request.args.get('lat', '35.6895')
     lon = request.args.get('lon', '139.6917')
+
+    # 天気予報を取得するURL（必ず上のlat, lonを使うようにする）
+    weather_url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={OPENWEATHER_API_KEY}&units=metric&lang=ja"
     
     # 読み取った lat と lon を使って天気を検索する
     weather_url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={OPENWEATHER_API_KEY}&units=metric&lang=ja"
