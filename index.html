@@ -5,33 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RainCall+</title>
     <style>
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 80%; max-width: 400px; }
-        h1 { font-size: 24px; color: #333; margin-bottom: 10px; }
-        .pop { font-size: 64px; font-weight: bold; color: #007bff; margin: 20px 0; }
-        p { color: #666; font-size: 18px; }
+        body { font-family: sans-serif; text-align: center; background: #eef; padding: 50px 20px; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .pop { font-size: 60px; color: #007bff; font-weight: bold; }
+        select { padding: 10px; font-size: 18px; border-radius: 10px; margin-top: 20px; width: 100%; }
     </style>
 </head>
 <body>
-    <div class="card shadow">
+    <div class="card">
         <h1>📍 {{ city }}</h1>
         <div class="pop">{{ pop }}%</div>
         <p>{{ message }}</p>
-    </div>
 
-    <script>
-        window.onload = function() {
-            const params = new URLSearchParams(window.location.search);
-            if (!params.has('lat')) {
-                navigator.geolocation.getCurrentPosition(function(pos) {
-                    const lat = pos.coords.latitude;
-                    const lon = pos.coords.longitude;
-                    window.location.href = `/?lat=${lat}&lon=${lon}`;
-                }, function(err) {
-                    console.log("位置情報が取得できませんでした");
-                });
-            }
-        };
-    </script>
+        <hr>
+        <p>地域を切り替える</p>
+        <select onchange="location.href='/?area=' + this.value">
+            <option value="">-- 地域を選択 --</option>
+            <option value="higashihiroshima">東広島市</option>
+            <option value="hiroshima">広島市</option>
+            <option value="tokyo">東京都</option>
+        </select>
+    </div>
 </body>
 </html>
