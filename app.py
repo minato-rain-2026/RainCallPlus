@@ -5,7 +5,7 @@ from flask import Flask, render_template, request
 app = Flask(__name__)
 
 # 取得したAPIキーをここに貼り付け
-API_KEY = "YOUR_API_KEY_HERE"
+API_KEY = "dcb2c4d8af0212f468f270bfcdc1dccf"
 
 AREAS = {
     "higashihiroshima": {"name": "東広島市", "lat": "34.399", "lon": "132.744"},
