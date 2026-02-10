@@ -4,8 +4,8 @@ from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
-# 取得したAPIキーをここに貼り付け
-API_KEY = "dcb2c4d8af0212f468f270bfcdc1dccf"
+# 提供いただいたキーをセットしました
+API_KEY = "Dcb2c4d8af0212f468f270bfcdc1dccf"
 
 AREAS = {
     "higashihiroshima": {"name": "東広島市", "lat": "34.399", "lon": "132.744"},
@@ -16,32 +16,31 @@ AREAS = {
 @app.route('/')
 def index():
     area_id = request.args.get('area', 'higashihiroshima')
+    # 変数名を 'area' に統一（ズレを防止）
     area = AREAS.get(area_id, AREAS['higashihiroshima'])
     
-    # 5日間/3時間おきの予報を取得（降水確率が取れるのはこれ）
-    url = url = f"https://api.openweathermap.org/data/2.5/forecast?lat={area_info['lat']}&lon={area_info['lon']}&appid={API_KEY}&units=metric&lang=ja"
+    url = f"https://api.openweathermap.org/data/2.5/forecast?lat={area['lat']}&lon={area['lon']}&appid={API_KEY}&units=metric&lang=ja"
+    
     try:
         response = requests.get(url, timeout=10)
         data = response.json()
         
-         if response.status_code == 200:
-            # 1. 気温を取得（ここはOK！）
+        if response.status_code == 200:
+            # 天気予報データから気温と降水確率を抽出
             temp = data['list'][0]['main']['temp']
-            
-            # 2. popの行（ここから左側のスペースを揃える！）
             pop = int(data['list'][0].get('pop', 0) * 100)
             
-            # 3. msgの行
             msg = f"気温は{temp}度です。"
             msg += "傘が必要です" if pop >= 30 else "傘は不要です"
             
-            # 4. returnの行
             return render_template('index.html', city=area['name'], pop=pop, message=msg)
         else:
-            # キーが有効化待ち(401)などの場合
-            return render_template('index.html', city=area['name'], pop="--", message=f"API準備中 (Status: {response.status_code})")
-    except:
-        return render_template('index.html', city=area['name'], pop="--", message="通信エラーが発生しました")
+            # キーの有効化待ちなどのエラー表示
+            return f"APIエラー: {data.get('message', '不明なエラー')} (Status: {response.status_code})"
+            
+    except Exception as e:
+        # 万が一の通信エラー用
+        return f"システムエラーが発生しました: {str(e)}"
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
