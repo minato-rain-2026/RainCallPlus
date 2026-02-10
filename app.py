@@ -27,7 +27,8 @@ def index():
         
         if response.status_code == 200:
             # 天気予報データから気温と降水確率を抽出
-            temp = data['list'][0]['main']['temp']
+           # round() を使って四捨五入して整数にする
+            temp = round(data['list'][0]['main']['temp']) 
             pop = int(data['list'][0].get('pop', 0) * 100)
             
             msg = f"気温は{temp}度です。"
