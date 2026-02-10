@@ -24,12 +24,18 @@ def index():
         response = requests.get(url, timeout=10)
         data = response.json()
         
-        if response.status_code == 200:
-         temp = data['list'][0]['main']['temp']   
-            # 最初の予報データから降水確率(pop)を取得 (0.0~1.0なので100倍)
-            # APIから0.0〜1.0の数字を抜き取って、100倍して整数にする
-            pop = int(res['list'][0].get('pop', 0) * 100)
-            msg = "傘が必要です" if pop >= 30 else "傘は不要です"
+         if response.status_code == 200:
+            # 1. 気温を取得（ここはOK！）
+            temp = data['list'][0]['main']['temp']
+            
+            # 2. popの行（ここから左側のスペースを揃える！）
+            pop = int(data['list'][0].get('pop', 0) * 100)
+            
+            # 3. msgの行
+            msg = f"気温は{temp}度です。"
+            msg += "傘が必要です" if pop >= 30 else "傘は不要です"
+            
+            # 4. returnの行
             return render_template('index.html', city=area['name'], pop=pop, message=msg)
         else:
             # キーが有効化待ち(401)などの場合
