@@ -19,15 +19,16 @@ def index():
     area = AREAS.get(area_id, AREAS['higashihiroshima'])
     
     # 5日間/3時間おきの予報を取得（降水確率が取れるのはこれ）
-    url = f"https://api.openweathermap.org/data/2.5/forecast?lat={area['lat']}&lon={area['lon']}&appid={API_KEY}&units=metric&lang=ja"
-    
+    url = url = f"https://api.openweathermap.org/data/2.5/forecast?lat={area_info['lat']}&lon={area_info['lon']}&appid={API_KEY}&units=metric&lang=ja"
     try:
         response = requests.get(url, timeout=10)
         data = response.json()
         
         if response.status_code == 200:
+         temp = data['list'][0]['main']['temp']   
             # 最初の予報データから降水確率(pop)を取得 (0.0~1.0なので100倍)
-            pop = int(data['list'][0].get('pop', 0) * 100)
+            # APIから0.0〜1.0の数字を抜き取って、100倍して整数にする
+            pop = int(res['list'][0].get('pop', 0) * 100)
             msg = "傘が必要です" if pop >= 30 else "傘は不要です"
             return render_template('index.html', city=area['name'], pop=pop, message=msg)
         else:
