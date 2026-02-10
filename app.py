@@ -4,11 +4,8 @@ from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
-# もしあなたのキーがダメなら、この2つの予備キーが自動で助けます
-API_KEYS = [
-    "f562768565f49e755294a210b387f34f", # 予備1 (テスト済み)
-    "38848f06536b1d42a209867990146039"  # あなたのキー
-]
+# 取得したAPIキーをここに貼り付け
+API_KEY = "YOUR_API_KEY_HERE"
 
 AREAS = {
     "higashihiroshima": {"name": "東広島市", "lat": "34.399", "lon": "132.744"},
@@ -19,30 +16,25 @@ AREAS = {
 @app.route('/')
 def index():
     area_id = request.args.get('area', 'higashihiroshima')
-    area_info = AREAS.get(area_id, AREAS['higashihiroshima'])
+    area = AREAS.get(area_id, AREAS['higashihiroshima'])
     
-    # 複数のキーを順番に試して、動くものを探す「不屈のロジック」
-    res_data = None
-    for key in API_KEYS:
-        url = f"https://api.openweathermap.org/data/2.5/weather?lat={area_info['lat']}&lon={area_info['lon']}&appid={key}&units=metric&lang=ja"
-        try:
-            response = requests.get(url, timeout=5)
-            if response.status_code == 200:
-                res_data = response.json()
-                break # 動くキーが見つかったら即終了
-        except:
-            continue
-
-    if res_data:
-        temp = res_data['main']['temp']
-        weather_desc = res_data['weather'][0]['description']
-        # 雨の判定
-        pop = 100 if any(word in weather_desc for word in ["雨", "雪", "降"]) else 0
-        message = f"気温は{temp}度。{'傘が必要です' if pop == 100 else '傘は不要です'}。"
-        return render_template('index.html', city=area_info['name'], pop=pop, message=message)
-    else:
-        # すべてのキーがダメだった時の、提出用最終防衛ライン
-        return "現在サーバーが混み合っています。5分後に再読み込みしてください。(Status: API_WAIT)"
+    # 5日間/3時間おきの予報を取得（降水確率が取れるのはこれ）
+    url = f"https://api.openweathermap.org/data/2.5/forecast?lat={area['lat']}&lon={area['lon']}&appid={API_KEY}&units=metric&lang=ja"
+    
+    try:
+        response = requests.get(url, timeout=10)
+        data = response.json()
+        
+        if response.status_code == 200:
+            # 最初の予報データから降水確率(pop)を取得 (0.0~1.0なので100倍)
+            pop = int(data['list'][0].get('pop', 0) * 100)
+            msg = "傘が必要です" if pop >= 30 else "傘は不要です"
+            return render_template('index.html', city=area['name'], pop=pop, message=msg)
+        else:
+            # キーが有効化待ち(401)などの場合
+            return render_template('index.html', city=area['name'], pop="--", message=f"API準備中 (Status: {response.status_code})")
+    except:
+        return render_template('index.html', city=area['name'], pop="--", message="通信エラーが発生しました")
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
